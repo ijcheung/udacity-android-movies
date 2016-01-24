@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+
+    <string name="error_load_failed">Unable to load movie data</string>
+
+    <string name="popularity">Popularity</string>
+    <string name="rating">Rating</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_movie_detail_actvity">MovieDetailActvity</string>
+    <string name="action_settings">Settings</string>
+</resources>

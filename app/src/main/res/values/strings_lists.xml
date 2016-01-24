@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="sort_by">
+        <item>@string/popularity</item>
+        <item>@string/rating</item>
+    </array>
+    <array name="sort_by_value">
+        <item>popularity</item>
+        <item>vote_average</item>
+    </array>
+</resources>
