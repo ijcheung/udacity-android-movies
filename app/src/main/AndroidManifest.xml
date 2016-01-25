@@ -13,14 +13,18 @@
         <activity android:name="com.icheung.popularmovies.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".activity.MovieDetailActivity"
-            android:label="@string/title_activity_movie_detail_actvity"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme">
+        </activity>
+        <provider
+            android:authorities="com.icheung.popularmovies"
+            android:name=".data.MovieProvider"
+            android:exported="false"
+            android:syncable="true" />
     </application>
 
 </manifest>

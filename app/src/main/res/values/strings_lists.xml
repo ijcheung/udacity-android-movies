@@ -3,6 +3,7 @@
     <array name="sort_by">
         <item>@string/popularity</item>
         <item>@string/rating</item>
+        <item>@string/favorite</item>
     </array>
     <array name="sort_by_value">
         <item>popularity</item>

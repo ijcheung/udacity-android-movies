@@ -80,6 +80,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         return totalPages;
     }
 
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
+    }
+
     public interface OnMovieClickedListener {
         void onMovieClicked(int position);
     }

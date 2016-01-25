@@ -1,20 +1,27 @@
 package com.icheung.popularmovies.fragment;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.icheung.popularmovies.R;
+import com.icheung.popularmovies.data.MovieContract;
 import com.icheung.popularmovies.model.Movie;
 import com.icheung.popularmovies.util.Constants;
 import com.squareup.picasso.Picasso;
 
-public class MovieDetailFragment extends Fragment {
+public class MovieDetailFragment extends Fragment implements Button.OnClickListener {
     public static final String ARG_ID           = "id";
     public static final String ARG_TITLE        = "title";
     public static final String ARG_RELEASE_DATE = "release_date";
@@ -22,14 +29,18 @@ public class MovieDetailFragment extends Fragment {
     public static final String ARG_OVERVIEW     = "overview";
     public static final String ARG_VOTE_AVERAGE = "vote_average";
 
+    private ContentResolver mContentResolver;
+
     private CollapsingToolbarLayout mToolbar;
     private ImageView mPoster;
     private TextView mReleaseDate;
     private TextView mRating;
+    private Button mFavorite;
     private TextView mSummary;
 
-    public MovieDetailFragment() {
-    }
+    private boolean isFavorited = false;
+
+    public MovieDetailFragment() { }
 
     public static MovieDetailFragment newInstance(Movie movie) {
         MovieDetailFragment fragment = new MovieDetailFragment();
@@ -53,6 +64,7 @@ public class MovieDetailFragment extends Fragment {
         mPoster = (ImageView) root.findViewById(R.id.poster);
         mReleaseDate = (TextView) root.findViewById(R.id.release_date);
         mRating = (TextView) root.findViewById(R.id.rating);
+        mFavorite = (Button) root.findViewById(R.id.favorite);
         mSummary = (TextView) root.findViewById(R.id.summary);
 
         return root;
@@ -61,6 +73,22 @@ public class MovieDetailFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        mContentResolver = getActivity().getContentResolver();
+
+        String[] selectionArgs = {Integer.toString(getArguments().getInt(ARG_ID))};
+        Cursor cursor = mContentResolver.query(MovieContract.FavoriteMoviesEntry.CONTENT_URI,
+                        null,
+                        MovieContract.FavoriteMoviesEntry.COLUMN_ID + " = ?",
+                        selectionArgs,
+                        null);
+
+        if(cursor.moveToFirst()){
+            mFavorite.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.btn_star_big_on, 0, 0, 0);
+            isFavorited = true;
+        }
+
+        mFavorite.setOnClickListener(this);
 
         Picasso.with(getActivity())
                 .load(Constants.POSTER_BASE_URL + Constants.POSTER_SIZE_780 + getArguments().getString(ARG_POSTER_PATH))
@@ -71,5 +99,40 @@ public class MovieDetailFragment extends Fragment {
         mReleaseDate.setText(getArguments().getString(ARG_RELEASE_DATE));
         mRating.setText(getArguments().getFloat(ARG_VOTE_AVERAGE) + "/10.0");
         mSummary.setText(getArguments().getString(ARG_OVERVIEW));
+    }
+
+    @Override
+    public void onClick(View v) {
+        if(isFavorited) {
+            String[] selectionArgs = {Integer.toString(getArguments().getInt(ARG_ID))};
+            int num = mContentResolver.delete(MovieContract.FavoriteMoviesEntry.CONTENT_URI,
+                    MovieContract.FavoriteMoviesEntry.COLUMN_ID + " = ?",
+                    selectionArgs);
+            if(num == 1) {
+                mFavorite.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.btn_star_big_off, 0, 0, 0);
+                isFavorited = false;
+            }
+        }
+        else {
+            Bundle arguments = getArguments();
+            ContentValues values = new ContentValues();
+
+            values.put(MovieContract.FavoriteMoviesEntry.COLUMN_ID, arguments.getInt(ARG_ID));
+            values.put(MovieContract.FavoriteMoviesEntry.COLUMN_TITLE, arguments.getString(ARG_TITLE));
+            values.put(MovieContract.FavoriteMoviesEntry.COLUMN_RELEASE_DATE, arguments.getString(ARG_RELEASE_DATE));
+            values.put(MovieContract.FavoriteMoviesEntry.COLUMN_POSTER_PATH, arguments.getString(ARG_POSTER_PATH));
+            values.put(MovieContract.FavoriteMoviesEntry.COLUMN_OVERVIEW, arguments.getString(ARG_OVERVIEW));
+            values.put(MovieContract.FavoriteMoviesEntry.COLUMN_RATING, arguments.getFloat(ARG_VOTE_AVERAGE));
+
+            mContentResolver.insert(MovieContract.FavoriteMoviesEntry.CONTENT_URI,
+                    values);
+
+            mFavorite.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.btn_star_big_on, 0, 0, 0);
+            isFavorited = true;
+        }
+
+        //Send Update to Sibling Fragment
+        Intent intent = new Intent(Constants.ACTION_FAVORITES_UPDATED);
+        LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
     }
 }
