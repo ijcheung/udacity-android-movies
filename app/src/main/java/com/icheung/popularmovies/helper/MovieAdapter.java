@@ -9,15 +9,15 @@ import android.widget.ImageView;
 
 import com.icheung.popularmovies.R;
 import com.icheung.popularmovies.model.Movie;
-import com.icheung.popularmovies.model.Page;
+import com.icheung.popularmovies.model.MovieWrapper;
 import com.icheung.popularmovies.util.Constants;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> {
-    private OnMovieClickedListener mListener;
-    private ArrayList<Movie> mMovies;
+    private final OnMovieClickedListener mListener;
+    private final ArrayList<Movie> mMovies;
     private int currentPage = 0;
     private int totalPages = 1;
     
@@ -57,11 +57,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         return mMovies.size();
     }
 
-    public void loadPage(Page page) {
+    public void loadPage(MovieWrapper page) {
         currentPage = page.getPage();
         totalPages = page.getTotalPages();
-        mMovies.addAll(page.getResults());
-        notifyItemRangeChanged(mMovies.size() - page.getResults().size(), page.getResults().size());
+        mMovies.addAll(page.getMovies());
+        notifyItemRangeChanged(mMovies.size() - page.getMovies().size(), page.getMovies().size());
     }
 
     public void clear() {

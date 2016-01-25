@@ -22,7 +22,7 @@ import com.icheung.popularmovies.data.MovieContract;
 import com.icheung.popularmovies.fragment.data.MovieDataFragment;
 import com.icheung.popularmovies.helper.MovieAdapter;
 import com.icheung.popularmovies.model.Movie;
-import com.icheung.popularmovies.model.Page;
+import com.icheung.popularmovies.model.MovieWrapper;
 import com.icheung.popularmovies.util.Constants;
 import com.icheung.popularmovies.util.InfiniteScrollListener;
 import com.icheung.popularmovies.util.Utilities;
@@ -47,7 +47,6 @@ public class MoviesFragment extends Fragment implements
 
     private MovieAdapter mAdapter;
     private ArrayList<Movie> mMovies;
-    private MovieDataFragment mMovieDataFragment;
 
     private int mSortBy;
 
@@ -55,11 +54,15 @@ public class MoviesFragment extends Fragment implements
 
     private OnFragmentInteractionListener mListener;
 
-    public MoviesFragment() { }
+    public MoviesFragment() {
+        mMoviesApi = new Retrofit.Builder()
+                .baseUrl(MoviesApi.BASE_ENDPOINT)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build().create(MoviesApi.class);
+    }
 
     public static MoviesFragment newInstance() {
-        MoviesFragment fragment = new MoviesFragment();
-        return fragment;
+        return new MoviesFragment();
     }
 
     @Override
@@ -70,7 +73,7 @@ public class MoviesFragment extends Fragment implements
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(mSortBy == 2) {
-                    mAdapter.clear();
+                    mMovies.clear();
                     loadFavorites();
                 }
             }
@@ -105,23 +108,18 @@ public class MoviesFragment extends Fragment implements
         mLocalBroadcastManager.registerReceiver(mFavoritesUpdatedReceiver,
                 new IntentFilter(Constants.ACTION_FAVORITES_UPDATED));
 
-        mMoviesApi = new Retrofit.Builder()
-                .baseUrl(MoviesApi.BASE_ENDPOINT)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build().create(MoviesApi.class);
-
         mSortByValues = getResources().getStringArray(R.array.sort_by_value);
 
         //Find Retained Data Fragment
         FragmentManager fm = getActivity().getSupportFragmentManager();
-        mMovieDataFragment = (MovieDataFragment) fm.findFragmentByTag(TAG_MOVIE_DATA_FRAGMENT);
+        MovieDataFragment movieDataFragment = (MovieDataFragment) fm.findFragmentByTag(TAG_MOVIE_DATA_FRAGMENT);
 
-        if (mMovieDataFragment == null) {
-            mMovieDataFragment = new MovieDataFragment();
-            fm.beginTransaction().add(mMovieDataFragment, TAG_MOVIE_DATA_FRAGMENT).commit();
+        if (movieDataFragment == null) {
+            movieDataFragment = new MovieDataFragment();
+            fm.beginTransaction().add(movieDataFragment, TAG_MOVIE_DATA_FRAGMENT).commit();
         }
 
-        mMovies = mMovieDataFragment.getData();
+        mMovies = movieDataFragment.getData();
         mAdapter = new MovieAdapter(this, mMovies);
         mMoviesRecyclerView.setAdapter(mAdapter);
 
@@ -182,11 +180,11 @@ public class MoviesFragment extends Fragment implements
 
     private void loadMovies(){
         if(mAdapter.getCurrentPage() < mAdapter.getTotalPages()) {
-            Call<Page> call = mMoviesApi.getMovies(mSortByValues[mSortBy] + ".desc", mAdapter.getCurrentPage() + 1, BuildConfig.MOVIE_DB_API_KEY);
-            call.enqueue(new Callback<Page>() {
+            Call<MovieWrapper> call = mMoviesApi.getMovies(mSortByValues[mSortBy] + ".desc", mAdapter.getCurrentPage() + 1, BuildConfig.MOVIE_DB_API_KEY);
+            call.enqueue(new Callback<MovieWrapper>() {
                 @Override
-                public void onResponse(Response<Page> response) {
-                    Page page = (response.body());
+                public void onResponse(Response<MovieWrapper> response) {
+                    MovieWrapper page = (response.body());
                     mAdapter.loadPage(page);
                 }
 
@@ -202,7 +200,7 @@ public class MoviesFragment extends Fragment implements
         Cursor cursor = getActivity().getContentResolver()
                 .query(MovieContract.FavoriteMoviesEntry.CONTENT_URI, null, null, null, null);
 
-        if(cursor.moveToFirst()){
+        if(cursor != null && cursor.moveToFirst()){
             do{
                 Movie movie = new Movie(
                         cursor.getInt(cursor.getColumnIndex(MovieContract.FavoriteMoviesEntry.COLUMN_ID)),
@@ -217,8 +215,10 @@ public class MoviesFragment extends Fragment implements
                 //Disable Auto Loading
                 mAdapter.setTotalPages(0);
 
-                mAdapter.notifyItemRangeInserted(0, mMovies.size());
+                mAdapter.notifyDataSetChanged();
             } while(cursor.moveToNext());
+
+            cursor.close();
         }
     }
 

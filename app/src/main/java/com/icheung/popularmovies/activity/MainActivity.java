@@ -47,11 +47,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
 
-        if (findViewById(R.id.movie_detail_container) != null) {
-            mTwoPane = true;
-        } else {
-            mTwoPane = false;
-        }
+        mTwoPane = findViewById(R.id.movie_detail_container) != null;
 
         mMoviesFragment = ((MoviesFragment)getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_movies));
