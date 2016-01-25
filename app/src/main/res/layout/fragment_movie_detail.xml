@@ -4,8 +4,7 @@
     android:id="@+id/main_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.icheung.popularmovies.activity.MovieDetailFragment"
-    tools:showIn="@layout/activity_movie_detail">
+    tools:context="com.icheung.popularmovies.fragment.MovieDetailFragment">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
